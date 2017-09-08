@@ -1,4 +1,5 @@
 include YARD::Templates::Helpers::HtmlHelper
+require "csv"
 
 def init
   super
@@ -81,22 +82,44 @@ def generate_feature_list
   generate_full_list features_ordered_by_name, :features
 end
 
-# Count scenarios for features
+# Count scenarios and write to csv file 
 def record_feature_scenarios(features)
-  count_with_examples = 0
-  features.each do |f|
-    count_with_examples += f.total_scenarios
+  metricsFile = "doc/metrics.csv"
+  if File.exist?(metricsFile)
+    File.delete(metricsFile)
   end
-  return count_with_examples
-end
 
-# Count scenarios for tags
-def record_tagged_scenarios(tags)
   scenario_count = 0
   count_with_examples = 0
-  tags.each do |t|
-    scenario_count += t.all_scenarios.size
-    count_with_examples += t.total_scenarios
+  CSV.open(metricsFile, "a+") do |csv|
+    csv << ["Feature", "Location", "Scenario Count", "Scenario Count (including examples)"]
+    features.each do |f|
+      scenario_count += f.scenarios.size
+      count_with_examples += f.total_scenarios
+      csv << [f.value, f.location, f.scenarios.size, f.total_scenarios]
+    end
+
+    csv << ["TOTAL", "", scenario_count, count_with_examples]
+  end
+  return scenario_count, count_with_examples
+end
+
+# Count scenarios for tag and write to csv file
+def record_tagged_scenarios(tags)
+  metricsFile = "doc/tag_metrics.csv"
+  if File.exist?(metricsFile)
+    File.delete(metricsFile)
+  end
+
+  scenario_count = 0
+  count_with_examples = 0
+  CSV.open(metricsFile, "a+") do |csv|
+    csv << ["Tag", "Scenario Count", "Scenario Count (including examples)"]
+    tags.each do |t|
+      scenario_count += t.all_scenarios.size
+      count_with_examples += t.total_scenarios
+      csv << [t.value, t.all_scenarios.size, t.total_scenarios]
+    end
   end
 end
 
@@ -183,7 +206,7 @@ end
 #
 def all_features_link
   features = Registry.all(:feature)
-  count_with_examples = record_feature_scenarios(features)
+  count, count_with_examples = record_feature_scenarios(features)
   if root_feature_directories.length == 0 || root_feature_directories.length > 1
     linkify YARD::CodeObjects::Cucumber::CUCUMBER_NAMESPACE, "All Features (#{count_with_examples})"
   else

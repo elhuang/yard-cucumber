@@ -203,7 +203,7 @@ module Cucumber
           step(s)
         }
         statement[:examples].each { |e|
-          examples(e)
+          examples(e,outline)
         }
       end
 
@@ -214,15 +214,19 @@ module Cucumber
       # later we can ensure that we have all the variations of the scenario
       # outline defined to be displayed.
       #
-      def examples(examples)
+      def examples(examples,parent)
         #log.debug "EXAMPLES"
+
+        return if has_exclude_tags?(examples[:tags].map { |t| t[:name].gsub(/^@/, '') })
 
         example = YARD::CodeObjects::Cucumber::ScenarioOutline::Examples.new(:keyword => examples[:keyword],
                                                                              :name => examples[:name],
                                                                              :line => examples[:location][:line],
                                                                              :comments => examples[:comments] ? examples.comments.map{|comment| comment.value}.join("\n") : '',
-                                                                             :rows => []
+                                                                             :rows => [],
+                                                                             :tags => examples[:tags].each {|example_tag| find_or_create_tag(example_tag[:name],parent) }
           )
+
         example.rows = [examples[:tableHeader][:cells].map{ |c| c[:value] }] if examples[:tableHeader]
         example.rows += matrix(examples[:tableBody]) if examples[:tableBody]
 

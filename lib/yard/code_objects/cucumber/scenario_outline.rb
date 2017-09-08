@@ -31,7 +31,7 @@ module YARD::CodeObjects::Cucumber
     
     class Examples
       
-      attr_accessor :name, :line, :keyword, :comments, :rows
+      attr_accessor :name, :line, :keyword, :comments, :rows, :tags
       
       # The first row of the rows contains the headers for the table
       def headers

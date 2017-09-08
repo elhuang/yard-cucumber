@@ -85,10 +85,12 @@ Feature: Displaying Scenario Outlines
     When the customer has purchased the product
     Then I expect the customer to be a member of the '<Product>' group
 
+    @groupA
     Examples: Example group A
      | Customer   | Product   |
      | Customer A | Product A |
 
+    @groupB
     Examples: Example group B
      | Customer   | Product   |
      | Customer B | Product A |

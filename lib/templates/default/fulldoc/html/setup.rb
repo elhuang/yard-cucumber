@@ -84,7 +84,7 @@ end
 
 # Count scenarios and write to csv file 
 def record_feature_scenarios(features)
-  metricsFile = "doc/metrics.csv"
+  metricsFile = "doc/metrics_seed_data.csv"
   if File.exist?(metricsFile)
     File.delete(metricsFile)
   end
@@ -92,14 +92,26 @@ def record_feature_scenarios(features)
   scenario_count = 0
   count_with_examples = 0
   CSV.open(metricsFile, "a+") do |csv|
-    csv << ["Feature", "Location", "Scenario Count", "Scenario Count (including examples)"]
+    csv << ["Scenario", "Example Data", "Tags"]
     features.each do |f|
       scenario_count += f.scenarios.size
       count_with_examples += f.total_scenarios
-      csv << [f.value, f.location, f.scenarios.size, f.total_scenarios]
+      unless f.nil? || f.scenarios.nil?
+        f.scenarios.each do |s|
+          if s.outline?
+            if s.examples.size > 0
+              s.examples.each do |e|
+                all_tags = f.tags.map(&:value) + s.tags.map(&:value) + e.tags.map(&:value)
+                e.data.each { |d| csv << [s.value, d, all_tags.uniq] }
+              end
+            end
+          else
+            all_tags = f.tags.map(&:value) + s.tags.map(&:value) 
+            csv << [s.value, "", all_tags.uniq]
+          end
+        end
+      end
     end
-
-    csv << ["TOTAL", "", scenario_count, count_with_examples]
   end
   return scenario_count, count_with_examples
 end
